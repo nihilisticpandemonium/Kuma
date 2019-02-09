@@ -1,6 +1,7 @@
 // -----------------------------------------------------------------------
 
 using System.Collections.Generic;
+
 using Kuma.Runtime;
 
 // <copyright file="KumaDictionary.cs" Company="Michael Tindal">
@@ -21,25 +22,25 @@ using Kuma.Runtime;
 // -----------------------------------------------------------------------
 
 namespace Kuma.Builtins {
-  /// <summary>
-  ///     TODO: Update summary.
-  /// </summary>
-  [KumaExport ("Array")]
-  public class KumaArray : List<dynamic> {
-    public KumaArray () { }
+    /// <summary>
+    ///     TODO: Update summary.
+    /// </summary>
+    [KumaExport ("Array")]
+    public class KumaArray : List<dynamic> {
+        public KumaArray () { }
 
-    public KumaArray (IEnumerable<dynamic> array) : base (array) { }
+        public KumaArray (IEnumerable<dynamic> array) : base (array) { }
 
-    [KumaExport ("<<")]
-    public void ArrayAdd (dynamic val) {
-      if (val is KumaArray) {
-        AddRange (val);
-      } else {
-        Add (val);
-      }
-    }
+        [KumaExport ("<<")]
+        public void ArrayAdd (dynamic val) {
+            if (val is KumaArray) {
+                AddRange (val);
+            } else {
+                Add (val);
+            }
+        }
 
-    /*
+        /*
 		def to_ary {
 			return self
 		}
@@ -229,5 +230,5 @@ namespace Kuma.Builtins {
 			Array.arrayWithArray(flattenAry(self));
 		}
 		*/
-  }
+    }
 }

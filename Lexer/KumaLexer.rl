@@ -166,8 +166,8 @@
 		'||='           { Symbol("CONDASSIGNO"); };
 		'&&='           { Symbol("CONDASSIGNA"); };
 		'.'             { Symbol("DOT");       };
-		'..'            { Symbol("IRANGE");    };
-		'...'           { Symbol("ERANGE");    };
+		'...'            { Symbol("IRANGE");    };
+		'..'           { Symbol("ERANGE");    };
 		'=>'            { Symbol("HASH");      };
 		'?'             { Symbol("QUESTION");  };
 		'%%'            { Symbol("PERCENT");   };

@@ -37,3 +37,195 @@ class Dictionary {
 		self;
 	}
 }
+/*
+class Array {
+    	def to_ary {
+			return self
+		}
+
+		def to_a {
+            return new Array(self)
+		}
+
+		def &(ary) {
+            if (ary.GetType() == typeof(Array)) {
+                return self
+            }
+			res = []
+			for(obj in ary) {
+				if(self === obj && !(res === obj)) {
+					res << obj
+				}
+			}
+			return res
+		}
+
+		def *(obj) {
+			if(obj.GetType() == typeof(Number)) {
+				res = []
+				for(i = 0; i < obj; i += 1) {
+					res << self
+				}
+				return res
+			} else if(obj.GetType() == typeof(String)) {
+                String.Join(obj, self)
+			}
+			return nil
+		}
+
+		def +(ary) {
+            if (ary.GetType() == typeof(Array)) {
+                return [] << self << ary
+            }
+			return nil
+		}
+
+		def -(ary) {
+            if (ary.GetType() != typeof(Array)) {
+				return self
+			}
+			res = []
+			for(obj in self) {
+				if(!(ary === obj)) {
+					res << obj
+				}
+			}
+			return res
+		}
+
+		def join(str) {
+            return String.Join(str, self)
+		}
+
+		def <<(rhs) {
+            if (rhs.GetType() == typeof(Array)) {
+                self.AddRange(rhs);
+            } else if (rhs != null) {
+                self.Add(rhs);
+            }
+			return self
+		}
+
+		def [](i,e=nil) {
+			if(e) {
+				if(e < 0) {
+					e = self.count + e;
+				}
+				return self[i..e];
+			} else {
+				if(i.GetType() == typeof(Array)) {
+					ret = [];
+					for(x = 0; x < i.count; x+=1) {
+						ret << self[i[x]];
+					};
+					return ret;
+				} else if(i >= 0) {
+					return self[i]
+				} else {
+					return self[self.count + i]
+				};
+			};
+		}
+
+		def []=(i,v) {
+			self.setObject(v,atIndex:i)
+				return self.objectAtIndex(i)
+		}
+
+		def <=>(ary) {
+			if(!ary.is?(:NSArray)) {
+				return 1
+			}
+			oal = ary.length > self.length
+			for(i = 0; i < (oal ? self.length : ary.length); i += 1) {
+				res = self[i] <=> ary[i]
+				return res if res
+			}
+			return 0 if (self.length == ary.length) or 1 if !oal or -1
+		}
+
+		def ===(rhs) {
+			return self.containsObject(rhs);
+		}
+
+		def each {
+			for(obj in self) {
+				yield obj;
+			};
+			return self;
+		};
+
+		def map {
+			results = [];
+			for(obj in self) {
+				tmp = yield(obj);
+				results << tmp if tmp;
+			};
+			return results;
+		};
+
+		def mapi {
+			results = [];
+			for(i = 0; i < self.count; i+=1) {
+				tmp = yield(obj,i);
+				results << tmp if tmp;
+			};
+			return results;
+		};
+
+		def select(&block) {
+			selected = [];
+			self.each { |x| selected << x if block(x); };
+			return selected;
+		};
+
+		def reduce(block,from:initial) {
+			result = initial;
+			enumerator = self.objectEnumerator;
+			result = block(result,object) while ((object = enumerator.nextObject));
+			return result;
+		};
+
+		def reduceLeft(block,from:initial) {
+			result = initial;
+			for(i = self.count - 1; i >= 0; i-=1) {
+				result = block(result,self[i]);
+			};
+			return result;
+		};
+
+		def flatten! {
+			flattenAry = ^(ary) {
+				flat = [];
+				for(obj in ary) {
+					if(obj.is?(:NSArray)) {
+						for(_obj in flattenAry(obj)) {
+							flat << _obj;
+						}
+					} else {
+						flat << obj;
+					}
+				}
+			}
+
+			self = flattenAry(self);
+		}
+
+		def flatten {
+			flattenAry = ^(ary) {
+				flat = [];
+				for(obj in ary) {
+					if(obj.is?(:NSArray)) {
+						for(_obj in flattenAry(obj)) {
+							flat << _obj;
+						}
+					} else {
+						flat << obj;
+					}
+				}
+			}
+
+			Array.arrayWithArray(flattenAry(self));
+        }
+}
+*/

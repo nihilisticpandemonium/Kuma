@@ -1,12 +1,74 @@
 // ----------------------------------------------------------------------- Copyright 2017 Michael
 // Tindal
-//
+// 
 // Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
 // in compliance with the License. You may obtain a copy of the License at
+// 
 //
+// 
+//
+// 
+//
+// 
+//
+// 
+//
+// 
+//
+// 
+//
+// 
+//
+// 
+//
+// 
+//
+// 
+//
+// 
+//
+// 
+//
+// 
+//
+// 
+//
+// 
+//
+// 
+//
+// 
+//
+// 
+//
+// 
+//
+// 
+//
+// 
+//
+// 
+//
+// 
+//
+// 
+//
+// 
+//
+// 
+//
+// 
+//
+// 
+//
+// 
+//
+// 
+//
+// 
 //
 // http://www.apache.org/licenses/LICENSE-2.0
-//
+// 
 // Unless required by applicable law or agreed to in writing, software distributed under the License
 // is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
 // or implied. See the License for the specific language governing permissions and limitations under
@@ -254,8 +316,12 @@ op_expression: pipe_expression ( OP pipe_expression)*;
 
 pipe_op: BACKWARDPIPE | FORWARDPIPE;
 
-pipe_expression:
-	logical_or_expression (pipe_op logical_or_expression)*;
+pipe_expression: range_expression (pipe_op range_expression)*;
+
+range_op: IRANGE | ERANGE;
+
+range_expression:
+	logical_or_expression (range_op logical_or_expression)*;
 
 logical_or_expression:
 	logical_xor_expression (LOGICALOR logical_xor_expression)*;
@@ -339,7 +405,8 @@ primary_right_side_parens_access:
 	primary_right_side_parens
 	| primary_right_side_access;
 
-primary_function_call: primary_right_side_parens_access+ primary_right_side_yield_block?;
+primary_function_call:
+	primary_right_side_parens_access+ primary_right_side_yield_block?;
 
 primary_left_side:
 	literal
@@ -413,13 +480,11 @@ next_arg: COMMA (COLON)? IDENTIFIER ( ASSIGN arg)?;
 
 definition_argument_list_no_paren:
 	first_var_arg (first_block_arg)?
-		| first_block_arg
-		| first_arg (next_arg)* (end_var_arg)? (end_block_arg)?;
+	| first_block_arg
+	| first_arg (next_arg)* (end_var_arg)? (end_block_arg)?;
 
 definition_argument_list:
-	LPAREN (
-		definition_argument_list_no_paren?
-	) RPAREN;
+	LPAREN (definition_argument_list_no_paren?) RPAREN;
 
 function_name:
 	IDENTIFIER
@@ -456,11 +521,12 @@ function_name:
 function_definition:
 	DEF (lvalue DOT)? function_name definition_argument_list? block;
 
-anonymous_function:
-	BITWISEXOR definition_argument_list? block;
+anonymous_function: BITWISEXOR definition_argument_list? block;
 
 yield_block:
-	LBRACE (BITWISEOR definition_argument_list_no_paren BITWISEOR)? block_contents RBRACE;
+	LBRACE (
+		BITWISEOR definition_argument_list_no_paren BITWISEOR
+	)? block_contents RBRACE;
 
 do_yield_block:
 	DO (BITWISEOR definition_argument_list_no_paren BITWISEOR)? block_contents END;

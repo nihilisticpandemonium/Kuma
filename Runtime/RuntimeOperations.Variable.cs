@@ -19,45 +19,46 @@
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
-using Kuma.Expressions;
+
 using Kuma.Builtins;
+using Kuma.Expressions;
 
 namespace Kuma.Runtime {
     using E = ExpressionType;
 
     public static partial class RuntimeOperations {
-        internal static dynamic Resolve(object rawName, object rawScope) {
-            if (rawName.GetType() == typeof (InstanceReference)) {
+        internal static dynamic Resolve (object rawName, object rawScope) {
+            if (rawName.GetType () == typeof (InstanceReference)) {
                 var iref = (InstanceReference) rawName;
-                var lval = CompilerServices.CompileExpression(iref.LValue, (KumaScope) rawScope);
-                var gmArgs = new List<Expression>();
-                gmArgs.Add(Expression.Constant(lval, typeof (object)));
-                return Dynamic(typeof (object), new InteropBinder.GetMember(iref.Key, (KumaScope) rawScope), gmArgs);
+                var lval = CompilerServices.CompileExpression (iref.LValue, (KumaScope) rawScope);
+                var gmArgs = new List<Expression> ();
+                gmArgs.Add (Expression.Constant (lval, typeof (object)));
+                return Dynamic (typeof (object), new InteropBinder.GetMember (iref.Key, (KumaScope) rawScope), gmArgs);
             }
             var name = (string) rawName;
             var scope = (KumaScope) rawScope;
-            if (name.StartsWith("$") && name != "$:") {
+            if (name.StartsWith ("$") && name != "$:") {
                 scope = scope.GlobalScope;
-                name = name.Substring(1);
+                name = name.Substring (1);
             }
-            if (name.StartsWith("@") && scope["<kuma_context_invokemember>"] != null) {
-                if (name.StartsWith("@@")) {
-                    var _val = Resolve("self", scope);
+            if (name.StartsWith ("@") && scope["<kuma_context_invokemember>"] != null) {
+                if (name.StartsWith ("@@")) {
+                    var _val = Resolve ("self", scope);
                     if (!(_val is KumaInstance)) {
                         // native object?
-                        _val = Kuma.Box((object) _val, scope);
+                        _val = Kuma.Box ((object) _val, scope);
                     }
                     var @class = ((KumaInstance) _val).Class;
                     return
-                        CompilerServices.CompileExpression(
-                            KumaExpression.Variable(KumaExpression.InstanceRef(Expression.Constant(@class),
-                                Expression.Constant(name.Substring(2)))), scope);
+                    CompilerServices.CompileExpression (
+                        KumaExpression.Variable (KumaExpression.InstanceRef (Expression.Constant (@class),
+                            Expression.Constant (name.Substring (2)))), scope);
                 }
                 return
-                    CompilerServices.CompileExpression(
-                        KumaExpression.Variable(
-                            KumaExpression.InstanceRef(KumaExpression.Variable(Expression.Constant("self")),
-                                Expression.Constant(name.Substring(1)))), scope);
+                CompilerServices.CompileExpression (
+                    KumaExpression.Variable (
+                        KumaExpression.InstanceRef (KumaExpression.Variable (Expression.Constant ("self")),
+                            Expression.Constant (name.Substring (1)))), scope);
             }
 
             var val = scope[name];
@@ -65,8 +66,8 @@ namespace Kuma.Runtime {
             // By casting to System.Object we can avoid the exception since it is a boxed value that can be null.
             if ((object) val == null) {
                 Type type;
-                if ((type = KumaTypeResolver.Resolve(name)) != null) {
-                    var @class = KumaClass.BoxClass(type);
+                if ((type = KumaTypeResolver.Resolve (name)) != null) {
+                    var @class = KumaClass.BoxClass (type);
                     scope.GlobalScope[@class.Name] = @class;
                     val = @class;
                 }
@@ -74,13 +75,13 @@ namespace Kuma.Runtime {
             return val;
         }
 
-        internal static dynamic ResolveSymbol(Symbol sym, object scope) {
-            return ((KumaScope) scope)[sym];
+        internal static dynamic ResolveSymbol (Symbol sym, object scope) {
+            return ((KumaScope) scope) [sym];
         }
 
-        internal static dynamic Assign(VariableExpression @var, dynamic value, E type, bool isConst, object rawScope) {
+        internal static dynamic Assign (VariableExpression @var, dynamic value, E type, bool isConst, object rawScope) {
             var scope = (KumaScope) rawScope;
-            var map = new Dictionary<ExpressionType, ExpressionType>();
+            var map = new Dictionary<ExpressionType, ExpressionType> ();
             map[E.AddAssign] = E.Add;
             map[E.AndAssign] = E.And;
             map[E.DivideAssign] = E.Divide;
@@ -101,31 +102,31 @@ namespace Kuma.Runtime {
             };
 
             if (@var.Name is InstanceReferenceExpression) {
-                var iref = CompilerServices.CompileExpression(@var.Name as InstanceReferenceExpression, scope);
-                var lval = CompilerServices.CompileExpression(iref.LValue, scope);
-                if (map.ContainsKey(type)) {
+                var iref = CompilerServices.CompileExpression (@var.Name as InstanceReferenceExpression, scope);
+                var lval = CompilerServices.CompileExpression (iref.LValue, scope);
+                if (map.ContainsKey (type)) {
                     value =
-                        CompilerServices.CreateLambdaForExpression(
-                            KumaExpression.Binary(
-                                Expression.Constant(Resolve(CompilerServices.CompileExpression(iref, scope), scope)),
-                                Expression.Constant(value), map[type]))();
+                        CompilerServices.CreateLambdaForExpression (
+                            KumaExpression.Binary (
+                                Expression.Constant (Resolve (CompilerServices.CompileExpression (iref, scope), scope)),
+                                Expression.Constant (value), map[type])) ();
                 }
-                if (incDecMap.Contains(type)) {
-                    var gmArgs = new List<Expression>();
-                    gmArgs.Add(Expression.Constant(lval, typeof (object)));
+                if (incDecMap.Contains (type)) {
+                    var gmArgs = new List<Expression> ();
+                    gmArgs.Add (Expression.Constant (lval, typeof (object)));
                     if (type == E.PreIncrementAssign || type == E.PreDecrementAssign) {
-                        var val = Resolve(CompilerServices.CompileExpression(iref, scope), scope);
-                        Assign(@var, 1, type == E.PreIncrementAssign ? E.AddAssign : E.SubtractAssign, false, rawScope);
+                        var val = Resolve (CompilerServices.CompileExpression (iref, scope), scope);
+                        Assign (@var, 1, type == E.PreIncrementAssign ? E.AddAssign : E.SubtractAssign, false, rawScope);
                         return val;
                     }
-                    Assign(@var, 1, type == E.PostIncrementAssign ? E.AddAssign : E.SubtractAssign, false, rawScope);
-                    return Resolve(CompilerServices.CompileExpression(iref, scope), scope);
+                    Assign (@var, 1, type == E.PostIncrementAssign ? E.AddAssign : E.SubtractAssign, false, rawScope);
+                    return Resolve (CompilerServices.CompileExpression (iref, scope), scope);
                 }
 
-                var smArgs = new List<Expression>();
-                smArgs.Add(Expression.Constant(lval, typeof (object)));
-                smArgs.Add(Expression.Constant(value, typeof (object)));
-                return Dynamic(typeof (object), new InteropBinder.SetMember(iref.Key, scope), smArgs);
+                var smArgs = new List<Expression> ();
+                smArgs.Add (Expression.Constant (lval, typeof (object)));
+                smArgs.Add (Expression.Constant (value, typeof (object)));
+                return Dynamic (typeof (object), new InteropBinder.SetMember (iref.Key, scope), smArgs);
             }
             if (@var.HasSym) {
                 var sym = @var.Sym;
@@ -142,60 +143,58 @@ namespace Kuma.Runtime {
                     scope = (KumaScope) rawScope;
                 }
 
-                if (map.ContainsKey(type)) {
+                if (map.ContainsKey (type)) {
                     var nvalue =
-                        CompilerServices.CreateLambdaForExpression(
-                            KumaExpression.Binary(Expression.Constant(ResolveSymbol(sym, scope)),
-                                Expression.Constant(value), map[type]))();
+                        CompilerServices.CreateLambdaForExpression (
+                            KumaExpression.Binary (Expression.Constant (ResolveSymbol (sym, scope)),
+                                Expression.Constant (value), map[type])) ();
                     scope[sym] = nvalue;
                     return nvalue;
                 }
 
-                if (incDecMap.Contains(type)) {
+                if (incDecMap.Contains (type)) {
                     if (type == E.PreIncrementAssign || type == E.PreDecrementAssign) {
-                        var val = ResolveSymbol(sym, scope);
-                        Assign(@var, 1, type == E.PreIncrementAssign ? E.AddAssign : E.SubtractAssign, false, rawScope);
+                        var val = ResolveSymbol (sym, scope);
+                        Assign (@var, 1, type == E.PreIncrementAssign ? E.AddAssign : E.SubtractAssign, false, rawScope);
                         return val;
                     }
-                    Assign(@var, 1, type == E.PostIncrementAssign ? E.AddAssign : E.SubtractAssign, false, rawScope);
-                    return ResolveSymbol(sym, scope);
+                    Assign (@var, 1, type == E.PostIncrementAssign ? E.AddAssign : E.SubtractAssign, false, rawScope);
+                    return ResolveSymbol (sym, scope);
                 }
 
                 scope[sym] = value;
                 if (isConst) {
-                    scope.Constants.Add(sym.Name);
+                    scope.Constants.Add (sym.Name);
                 }
                 return value;
             }
-            string name = CompilerServices.CompileExpression(@var.Name, scope);
-            if (name.StartsWith("$") && name != "$:") {
+            string name = CompilerServices.CompileExpression (@var.Name, scope);
+            if (name.StartsWith ("$") && name != "$:") {
                 scope = scope.GlobalScope;
-                name = name.Substring(1);
+                name = name.Substring (1);
             }
             var found = false;
-            if (name.StartsWith("@")) {
+            if (name.StartsWith ("@")) {
                 if (scope["<kuma_context_invokemember>"] != null) {
                     var ivar =
-                        KumaExpression.Variable(
-                            KumaExpression.InstanceRef(KumaExpression.Variable(Expression.Constant("self")),
-                                Expression.Constant(name.Substring(1))));
-                    if (map.ContainsKey(type)) {
+                        KumaExpression.Variable (
+                            KumaExpression.InstanceRef (KumaExpression.Variable (Expression.Constant ("self")),
+                                Expression.Constant (name.Substring (1))));
+                    if (map.ContainsKey (type)) {
                         value =
-                            CompilerServices.CreateLambdaForExpression(
-                                KumaExpression.Binary(ivar, Expression.Constant(value), map[type]))();
+                            CompilerServices.CreateLambdaForExpression (
+                                KumaExpression.Binary (ivar, Expression.Constant (value), map[type])) ();
                     }
-                    var assn = KumaExpression.Assign(KumaExpression.LeftHandValue(ivar), Expression.Constant(value));
-                    return CompilerServices.CompileExpression(assn, scope);
+                    var assn = KumaExpression.Assign (KumaExpression.LeftHandValue (ivar), Expression.Constant (value));
+                    return CompilerServices.CompileExpression (assn, scope);
                 }
                 found = true;
-                name = name.Substring(1);
+                name = name.Substring (1);
             }
-            if (name == "self")
-            {
+            if (name == "self") {
                 if (scope["<kuma_context_selfname>"] != null &&
                     scope["<kuma_context_selfscope>"] != null &&
-                    scope["<kuma_context_invokemember>"] != null)
-                {
+                    scope["<kuma_context_invokemember>"] != null) {
                     name = scope["<kuma_context_selfname>"];
                     scope = scope["<kuma_context_selfscope>"];
                     found = true;
@@ -212,79 +211,75 @@ namespace Kuma.Runtime {
                 scope = (KumaScope) rawScope;
             }
 
-            if (map.ContainsKey(type)) {
+            if (map.ContainsKey (type)) {
                 var nvalue =
-                    CompilerServices.CreateLambdaForExpression(
-                        KumaExpression.Binary(Expression.Constant(Resolve(name, scope)), Expression.Constant(value),
-                            map[type]))();
+                    CompilerServices.CreateLambdaForExpression (
+                        KumaExpression.Binary (Expression.Constant (Resolve (name, scope)), Expression.Constant (value),
+                            map[type])) ();
                 scope[name] = nvalue;
                 return nvalue;
             }
 
-            if (incDecMap.Contains(type)) {
+            if (incDecMap.Contains (type)) {
                 if (type == E.PostIncrementAssign || type == E.PostDecrementAssign) {
-                    var val = Resolve(name, scope);
-                    Assign(@var, 1, type == E.PostIncrementAssign ? E.AddAssign : E.SubtractAssign, false, rawScope);
+                    var val = Resolve (name, scope);
+                    Assign (@var, 1, type == E.PostIncrementAssign ? E.AddAssign : E.SubtractAssign, false, rawScope);
                     return val;
                 }
-                Assign(@var, 1, type == E.PreIncrementAssign ? E.AddAssign : E.SubtractAssign, false, rawScope);
-                return Resolve(name, scope);
+                Assign (@var, 1, type == E.PreIncrementAssign ? E.AddAssign : E.SubtractAssign, false, rawScope);
+                return Resolve (name, scope);
             }
 
             scope[name] = value;
             if (isConst) {
-                scope.Constants.Add(name);
+                scope.Constants.Add (name);
             }
             return value;
         }
 
-        internal static dynamic ConditionalAssign(VariableExpression @var, dynamic value, KumaExpressionType conditionalAssignmentType, bool isConst,
+        internal static dynamic ConditionalAssign (VariableExpression @var, dynamic value, KumaExpressionType conditionalAssignmentType, bool isConst,
             object rawScope) {
             var scope = rawScope as KumaScope;
-            var v = Resolve(CompilerServices.CompileExpression(@var.Name, scope), scope);
-            if (Boolean(v)) {
+            var v = Resolve (CompilerServices.CompileExpression (@var.Name, scope), scope);
+            if (Boolean (v)) {
                 if (conditionalAssignmentType == KumaExpressionType.IfNotNullAssign) {
-                    return Assign(@var, value, E.Assign, isConst, scope);
+                    return Assign (@var, value, E.Assign, isConst, scope);
                 }
-            }
-            else {
+            } else {
                 if (conditionalAssignmentType == KumaExpressionType.IfNullAssign) {
-                    return Assign(@var, value, E.Assign, isConst, scope);
+                    return Assign (@var, value, E.Assign, isConst, scope);
                 }
             }
             return v;
         }
 
-        internal static dynamic ParallelAssign(
+        internal static dynamic ParallelAssign (
             List<ParallelAssignmentExpression.ParallelAssignmentInfo> leftHandValues,
             List<ParallelAssignmentExpression.ParallelAssignmentInfo> rightHandValues, object rawScope) {
             var scope = rawScope as KumaScope;
-            var rvalues = new List<object>();
-            var fval = CompilerServices.CompileExpression(rightHandValues[0].Value as Expression, scope);
+            var rvalues = new List<object> ();
+            var fval = CompilerServices.CompileExpression (rightHandValues[0].Value as Expression, scope);
 
             if (fval is List<object> && !rightHandValues[0].IsWildcard) {
-                rvalues = new List<object>(fval as List<object>);
-            }
-            else {
+                rvalues = new List<object> (fval as List<object>);
+            } else {
                 foreach (var rvalue in rightHandValues) {
-                    var val = CompilerServices.CompileExpression(rvalue.Value as Expression, scope);
+                    var val = CompilerServices.CompileExpression (rvalue.Value as Expression, scope);
                     if (rvalue.IsWildcard) {
                         if (val is List<object>) {
-                            (val as List<object>).ForEach(value => rvalues.Add(value));
+                            (val as List<object>).ForEach (value => rvalues.Add (value));
+                        } else {
+                            rvalues.Add (val);
                         }
-                        else {
-                            rvalues.Add(val);
-                        }
-                    }
-                    else {
-                        rvalues.Add(val);
+                    } else {
+                        rvalues.Add (val);
                     }
                 }
             }
 
             var i = 0;
             var k = 0;
-            var result = new KumaArray();
+            var result = new KumaArray ();
 
             foreach (var _lvalue in leftHandValues) {
                 var lvalue = _lvalue.Value;
@@ -293,24 +288,22 @@ namespace Kuma.Runtime {
                 }
                 k++;
                 if (lvalue is List<ParallelAssignmentExpression.ParallelAssignmentInfo>) {
-                    result.Add(ParallelAssign(lvalue as List<ParallelAssignmentExpression.ParallelAssignmentInfo>,
+                    result.Add (ParallelAssign (lvalue as List<ParallelAssignmentExpression.ParallelAssignmentInfo>,
                         new List<ParallelAssignmentExpression.ParallelAssignmentInfo> {
                             new ParallelAssignmentExpression.ParallelAssignmentInfo {
                                 IsWildcard = false,
-                                Value = Expression.Constant(rvalues[i++])
+                                    Value = Expression.Constant (rvalues[i++])
                             }
                         }, scope));
-                }
-                else if (_lvalue.IsWildcard) {
-                    var mvalues = new KumaArray();
+                } else if (_lvalue.IsWildcard) {
+                    var mvalues = new KumaArray ();
                     for (var j = i; j < rvalues.Count; j++) {
-                        mvalues.Add(rvalues[j]);
+                        mvalues.Add (rvalues[j]);
                     }
-                    result.Add(Assign(lvalue as VariableExpression, mvalues, E.Assign, false, rawScope));
+                    result.Add (Assign (lvalue as VariableExpression, mvalues, E.Assign, false, rawScope));
                     break;
-                }
-                else {
-                    result.Add(Assign(lvalue as VariableExpression, rvalues[i++], E.Assign, false, rawScope));
+                } else {
+                    result.Add (Assign (lvalue as VariableExpression, rvalues[i++], E.Assign, false, rawScope));
                 }
             }
 
@@ -320,11 +313,10 @@ namespace Kuma.Runtime {
                         var lvalues =
                             leftHandValues[j].Value as List<ParallelAssignmentExpression.ParallelAssignmentInfo>;
                         for (var l = 0; l < lvalues.Count; l++) {
-                            result.Add(Assign(lvalues[l].Value as VariableExpression, null, E.Assign, false, scope));
+                            result.Add (Assign (lvalues[l].Value as VariableExpression, null, E.Assign, false, scope));
                         }
-                    }
-                    else {
-                        result.Add(Assign(leftHandValues[j].Value as VariableExpression, null, E.Assign, false, scope));
+                    } else {
+                        result.Add (Assign (leftHandValues[j].Value as VariableExpression, null, E.Assign, false, scope));
                     }
                 }
             }
@@ -332,48 +324,51 @@ namespace Kuma.Runtime {
             return result.Count > 1 ? result : result[0];
         }
 
-        internal static dynamic Alias(object rawFrom, object rawTo, object rawScope) {
+        internal static dynamic Alias (object rawFrom, object rawTo, object rawScope) {
             string from, to;
             var scope = (KumaScope) rawScope;
             if (rawFrom is string) {
                 from = (string) rawFrom;
-            }
-            else if (rawFrom is Symbol) {
+            } else if (rawFrom is Symbol) {
                 from = ((Symbol) rawFrom).Name;
-            }
-            else {
+            } else {
                 return null;
             }
             if (rawTo is string) {
                 to = (string) rawTo;
-            }
-            else if (rawTo is Symbol) {
+            } else if (rawTo is Symbol) {
                 to = ((Symbol) rawTo).Name;
-            }
-            else {
+            } else {
                 return null;
             }
-            if (from.StartsWith("$")) {
+            if (from.StartsWith ("$")) {
                 scope = scope.GlobalScope;
-                from = from.Substring(1);
+                from = from.Substring (1);
             }
-            if (to.StartsWith("$")) {
+            if (to.StartsWith ("$")) {
                 scope = scope.GlobalScope;
-                to = to.Substring(1);
+                to = to.Substring (1);
             }
-            scope.AddAlias(from, to);
+            scope.AddAlias (from, to);
             return null;
         }
 
-        internal static dynamic Typeof(object value) {
+        internal static dynamic Typeof (object value) {
             if (value == null) {
                 return typeof (object);
             }
-            var val = value.GetType();
-            if (val == Type.GetType("System.MonoType") || val == Type.GetType("System.RuntimeType")) {
+            var val = value.GetType ();
+            if (val == Type.GetType ("System.MonoType") || val == Type.GetType ("System.RuntimeType")) {
                 val = typeof (Type);
             }
             return val;
+        }
+
+        internal static dynamic Range (Expression startExpr, Expression endExpr, bool inclusive) {
+            var start = (int) (CompilerServices.CreateLambdaForExpression (startExpr) ());
+            var end = (int) (CompilerServices.CreateLambdaForExpression (endExpr) ());
+
+            return new KumaRange (start, end, inclusive);
         }
     }
 }
